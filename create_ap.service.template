@@ -1,0 +1,14 @@
+[Unit]
+Description=Create AP Service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+KillMode=none
+User=%I
+ExecStart=/usr/bin/tmux new-session -s create_ap -n create_ap -d "sudo create_ap -n --driver rtl871xdrv -g GATEWAY wlan0 SSID PASSWORD"
+ExecStop=/usr/bin/tmux send-keys -t create_ap:create_ap C-c
+WorkingDirectory=/home/%I/
+
+[Install]
+WantedBy=multi-user.target

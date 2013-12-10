@@ -25,6 +25,7 @@ usage() {
     echo "                           'bridge' for bridging"
     echo "                           'none' for no Internet sharing (equivalent to -n)"
     echo "  --hidden            Make the Access Point hidden (do not broadcast the SSID)"
+    echo "  --driver <driver>   Use a custom driver for the wifi interface (default: nl80211)" 
     echo
     echo "Non-Bridging Options:"
     echo "  -g <gateway>        IPv4 Gateway for the Access Point (default: 192.168.12.1)"
@@ -32,6 +33,7 @@ usage() {
     echo
     echo "Examples:"
     echo "  $(basename $0) wlan0 eth0 MyAccessPoint MyPassPhrase"
+    echo "  $(basename $0) --driver rtl871xdrv wlan0 eth0 MyAccessPoint MyPassPhrase"
     echo "  $(basename $0) -n wlan0 MyAccessPoint MyPassPhrase"
     echo "  $(basename $0) -m bridge wlan0 eth0 MyAccessPoint MyPassPhrase"
     echo "  echo -e 'MyAccessPoint\nMyPassPhrase' | $(basename $0) wlan0 eth0"
@@ -74,12 +76,13 @@ networkmanager_rm_unmanaged() {
     sleep 2
 }
 
-ARGS=$(getopt -o hc:w:g:dnm: -l "help","hidden" -n $(basename $0) -- "$@")
+ARGS=$(getopt -o hc:w:g:dnm: -l "driver":,"help","hidden" -n $(basename $0) -- "$@")
 [[ $? -ne 0 ]] && exit 1
 eval set -- "$ARGS"
 
 CHANNEL=1
 GATEWAY=192.168.12.1
+DRIVER=nl80211
 WPA_VERSION=1+2
 ETC_HOSTS=0
 HIDDEN=0
@@ -94,6 +97,11 @@ while :; do
         --hidden)
             shift
             HIDDEN=1
+            ;;
+        --driver)
+            shift
+            DRIVER="$1"
+            shift
             ;;
         -c)
             shift
@@ -217,7 +225,7 @@ echo "Config dir: $CONFDIR"
 cat << EOF > $CONFDIR/hostapd.conf
 ssid=${SSID}
 interface=${WIFI_IFACE}
-driver=nl80211
+driver=${DRIVER}
 hw_mode=g
 channel=${CHANNEL}
 
